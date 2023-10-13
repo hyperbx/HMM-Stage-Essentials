@@ -1,0 +1,51 @@
+Code "Fix 2D Volume Mode Package" by "Hyper"
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "Memory"
+
+    static bool _isInitialised = false;
+    static bool _isCyberSpace = false;
+//
+{
+    if (!_isInitialised)
+    {
+        /* 0x140914180 */
+        long sig = ScanSignature
+        (
+            "\x33\xD2\x48\x8B\xC8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\xC8",
+            "xxxxxx????xxxx????xxxx????xxxxxxx????xxx"
+        );
+
+        fixed (bool* p_isCyberSpace = &_isCyberSpace)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    mov  rdx, {(long)p_isCyberSpace}
+                    cmp  byte ptr [rdx], 0
+                    jnz  isCyber
+                    xor  edx, edx
+                    jmp  exit
+                isCyber:
+                    mov  edx, 2
+                exit:
+                    mov  rcx, rax
+                    mov  rax, {Memory.ReadCall(sig + 5)}
+                    call rax
+                    mov  rcx, rdi
+                    mov  rax, {Memory.ReadCall(sig + 0x0D)}
+                    call rax
+                ",
+
+                sig,
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    _isCyberSpace = IS_WORLD_FLAG(IsCyberSpace);
+}

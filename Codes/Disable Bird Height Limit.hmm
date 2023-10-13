@@ -1,0 +1,17 @@
+Patch "Disable Bird Height Limit" by "Hyper"
+//
+    #lib "Memory"
+//
+{
+    /* 0x1405418E8 */
+    var sig = ScanSignature
+    (
+        "\x77\x19\xE8\xCC\xCC\xCC\xCC\xBA\x0B\x00\x00\x00",
+        "xxx????xxxxx"
+    );
+
+    if (sig == 0)
+        return;
+
+    Memory.WriteForceJump(sig);
+}
