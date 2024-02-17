@@ -1,0 +1,62 @@
+Code "Hide Grind Rails" by "Hyper"
+//
+    #lib "Memory"
+
+    #import "Services"
+
+    using System.Collections.Generic;
+
+    static bool _isInitialised = false;
+
+    static long _pRailBodyLoadAddr = 0;
+    static long _pRailHeadLoadAddr = 0;
+
+    static string _lastStageID = string.Empty;
+
+    // !!! EDIT THESE MEMBERS TO SUIT YOUR NEEDS !!! //
+
+    static List<string> _myStageIDs = new() { "w6d01" };
+
+    ///////////////////////////////////////////////////
+//
+{
+    if (!_isInitialised)
+    {
+        /* v1.41: 0x1408710EB */
+        _pRailBodyLoadAddr = ScanSignature
+        (
+            "\x0F\x84\xA5\x00\x00\x00\x48\x8D\x8D\xB0\x01\x00\x00",
+            "xxxxxxxxxxxxx"
+        );
+
+        /* v1.41: 0x14087139A */
+        _pRailHeadLoadAddr = ScanSignature
+        (
+            "\x0F\x84\x4C\x03\x00\x00\x0F\x29\xB4\x24\x60\x05\x00\x00",
+            "xxxxxxxxxxxxxx"
+        );
+
+        Memory.Preserve(_pRailBodyLoadAddr, 6);
+        Memory.Preserve(_pRailHeadLoadAddr, 6);
+
+        _isInitialised = true;
+    }
+    
+    var currentStageID = LevelInfo.GetCurrentStageID();
+
+    if (_lastStageID != currentStageID)
+    {
+        if (_myStageIDs.Contains(currentStageID))
+        {
+            Memory.WriteForceJump(_pRailBodyLoadAddr);
+            Memory.WriteForceJump(_pRailHeadLoadAddr);
+        }
+        else if (_myStageIDs.Contains(_lastStageID))
+        {
+            Memory.Restore(_pRailBodyLoadAddr);
+            Memory.Restore(_pRailHeadLoadAddr);
+        }
+
+        _lastStageID = currentStageID;
+    }
+}
