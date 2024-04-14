@@ -6,7 +6,7 @@ A repository of essential codes for creating stage mods for Hedgehog Engine game
 ### Sonic Forces
 Name|Description
 ----|-----------
-[Customisable Falling Floor Timers](https://github.com/hyperbx/HMM-Stage-Essentials/blob/main/Sonic%20Forces/Customisable%20Falling%20Floor%20Timers.hmm)|Allows you to customise the time taken for ObjNormalFloor to begin falling once the player has stood on it.
+[Customisable Falling Floor Timers](https://github.com/hyperbx/HMM-Stage-Essentials/blob/main/Sonic%20Forces/Customisable%20Falling%20Floor%20Timers.hmm)|Allows you to customise the time taken for `ObjNormalFloor` to begin falling once the player has stood on it.
 
 ### Sonic Frontiers
 Name|Description
