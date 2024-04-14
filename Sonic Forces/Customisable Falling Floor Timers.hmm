@@ -1,0 +1,105 @@
+Patch "Customisable Falling Floor Timers" by "Hyper"
+//
+    #lib "GameObject"
+    #lib "Helpers"
+
+    #include "Helpers" noemit
+
+    #import "Objects"
+    #import "Services"
+
+    using System.Collections.Generic;
+    
+    // !!! EDIT THESE MEMBERS TO SUIT YOUR NEEDS !!! //
+
+    static List<(string Stage, string Object, float Time)> _customFallTimes = new()
+    {
+        ("w5a04", "ObjNormalFloorW5265", 5.0f)
+    };
+
+    ///////////////////////////////////////////////////
+
+    static class NativeCode
+    {
+        public static long fpGetFallTime => GET_UNMANAGED_FUNCTION_PTR(GetFallTime);
+
+        UNMANAGED_FUNCTION(float, GetFallTime, ObjNormalFloor* in_pObjNormalFloor)
+        {
+            var stage = LevelInfo.GetCurrentStageID();
+            var obj = in_pObjNormalFloor->Base.ToString();
+
+            foreach (var definition in _customFallTimes)
+            {
+                if (definition.Stage != stage)
+                    continue;
+
+                if (definition.Object != obj)
+                    continue;
+
+                return definition.Time;
+            }
+
+            return 3.0f;
+        }
+    }
+//
+{
+    WriteAsmHook
+    (
+        $@"
+            ; Preserve floating point registers.
+            sub    rsp, 48
+            movups [rsp], xmm0
+            movups [rsp + 16], xmm1
+            movups [rsp + 32], xmm3
+
+            ; Preserve general purpose registers.
+            push   rcx
+            push   rdx
+            push   r8
+            push   r9
+            push   r10
+            push   r11
+
+            ; Get the fall time defined for this ObjNormalFloor.
+            ; RCX stores a pointer to ObjNormalFloor already, which is why we don't explicitly set it here.
+            mov    rax, {NativeCode.fpGetFallTime}
+            call   rax
+
+            ; Restore general purpose registers.
+            pop    r11
+            pop    r10
+            pop    r9
+            pop    r8
+            pop    rdx
+            pop    rcx
+
+            ; Store retrieved fall time in XMM2.
+            movss  xmm2, xmm0
+
+            ; Restore floating point registers.
+            movups xmm0, [rsp]
+            movups xmm1, [rsp + 16]
+            movups xmm3, [rsp + 32]
+            add    rsp, 48
+
+            ; Check if the value in XMM2 is above the value in XMM3.
+            ; If it is, we exit into the code that explicitly sets the clamped value.
+            comiss xmm3, xmm2
+            ja     exit
+
+            ; The value in XMM2 is below the value in XMM3.
+            ; This will jump into the code that increases the timer and shake exponent.
+            mov    rax, 0x14027C016
+            jmp    rax
+            
+        exit:
+            ; Set explicit clamp value to our final fall time.
+            movss  dword ptr [rcx + 0x4F8], xmm2
+        ",
+
+        0x14027BFE3,
+
+        HookBehavior.Replace
+    );
+}
