@@ -1,5 +1,5 @@
 # HMM Stage Essentials
-A repository of essentials for creating stage mods for Hedgehog Engine games.
+A repository of essential codes for creating stage mods for Hedgehog Engine games.
 
 ## Contents
 
